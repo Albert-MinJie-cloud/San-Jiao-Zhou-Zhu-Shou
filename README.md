@@ -52,7 +52,16 @@ uv run uvicorn app.main:app --port 8000
 
 > 需要 `uv`：`brew install uv`
 >
-> OCR 需系统安装 Tesseract：`brew install tesseract tesseract-lang`
+> OCR 需系统安装 Tesseract：
+>
+> ```bash
+> brew install tesseract
+> # 中文语言包（~350MB 合集，网络不好可单独下载）
+> brew install tesseract-lang
+> # 或手动下载单个文件（仅 ~10MB）：
+> # curl -L -o /opt/homebrew/share/tessdata/chi_sim.traineddata \
+> #   https://github.com/tesseract-ocr/tessdata/raw/main/chi_sim.traineddata
+> ```
 
 ### 后端（Node 版）
 
