@@ -1,0 +1,20 @@
+[package]
+name = "delta-cli"
+version = "0.1.0"
+edition = "2024"
+description = "三角洲行动助手 - 终端版"
+
+[[bin]]
+name = "delta"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "rustls-tls", "multipart"], default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+toml = "0.8"
+dirs = "6"
+colored = "3"
+comfy-table = "7"
