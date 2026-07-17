@@ -45,7 +45,9 @@ router.get("/daily", (req, res) => {
   const passwords = new Map<number, string>();
   if (date) {
     const rows = db
-      .prepare("SELECT location_id, password FROM daily_passwords WHERE date = ?")
+      .prepare(
+        "SELECT location_id, password FROM daily_passwords WHERE date = ?",
+      )
       .all(date) as { location_id: number; password: string }[];
     rows.forEach((r) => passwords.set(r.location_id, r.password));
   }
@@ -95,7 +97,11 @@ router.post(
             item.location.includes(l.name) ||
             l.name.includes(item.location),
         );
-        return { locationId: l.id, name: l.name, password: hit?.password ?? "" };
+        return {
+          locationId: l.id,
+          name: l.name,
+          password: hit?.password ?? "",
+        };
       });
       res.json({ results });
     } catch (err) {
@@ -113,7 +119,9 @@ router.put("/admin/daily", requireAdmin, (req, res) => {
     entries?: { locationId: number; password: string }[];
   };
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(entries)) {
-    res.status(400).json({ error: "参数错误：需要 date(YYYY-MM-DD) 和 entries" });
+    res
+      .status(400)
+      .json({ error: "参数错误：需要 date(YYYY-MM-DD) 和 entries" });
     return;
   }
   const upsert = db.prepare(
@@ -184,7 +192,12 @@ router.post("/admin/locations", requireAdmin, (req, res) => {
     "INSERT INTO locations (id, name, guide, image_url, sort_order) VALUES (?, ?, ?, ?, ?)",
   ).run(id, name.trim(), guide ?? "", imageUrl ?? "", max.s + 1);
   res.json({
-    location: { id, name: name.trim(), guide: guide ?? "", imageUrl: imageUrl ?? "" },
+    location: {
+      id,
+      name: name.trim(),
+      guide: guide ?? "",
+      imageUrl: imageUrl ?? "",
+    },
   });
 });
 

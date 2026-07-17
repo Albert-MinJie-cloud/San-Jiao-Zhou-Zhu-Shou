@@ -1,29 +1,20 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  Crosshair,
-  History,
-  KeyRound,
-  Loader2,
-  MapPin,
-  Plus,
-  Save,
-  ScanSearch,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Crosshair } from "lucide-react";
+import type { LocationConfig } from "@/types";
+import { getDaily, getHistory } from "@/api/daily";
 import {
   addLocation,
   deleteLocation,
-  getDaily,
-  getHistory,
   getLocations,
   recognize,
   saveDaily,
   saveLocations,
-  type LocationConfig,
-} from "../api";
-
-const TOKEN_KEY = "admin_token";
+} from "@/api/admin";
+import { useAuth } from "@/hooks/useAuth";
+import NavBar from "@/components/NavBar";
+import LoginForm from "./admin/LoginForm";
+import PasswordEntry from "./admin/PasswordEntry";
+import LocationConfigSection from "./admin/LocationConfig";
 
 function todayStr() {
   const d = new Date();
@@ -32,11 +23,8 @@ function todayStr() {
 }
 
 export default function Admin() {
-  const [token, setToken] = useState(
-    () => localStorage.getItem(TOKEN_KEY) ?? "",
-  );
+  const { token, authed, login, handleAuthError } = useAuth();
   const [tokenInput, setTokenInput] = useState("");
-  const [authed, setAuthed] = useState(false);
 
   const [locations, setLocations] = useState<LocationConfig[]>([]);
   const [passwords, setPasswords] = useState<Record<number, string>>({});
@@ -48,50 +36,29 @@ export default function Admin() {
   const [savingLocs, setSavingLocs] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleAuthError = useCallback((err: unknown) => {
-    if ((err as { status?: number }).status === 401) {
-      localStorage.removeItem(TOKEN_KEY);
-      setToken("");
-      setAuthed(false);
-      setMessage("密钥错误，请重新登录");
-      return true;
-    }
-    return false;
-  }, []);
-
-  // 有 token 时尝试拉取地点配置来验证密钥
+  // 认证通过后拉取地点配置
   useEffect(() => {
-    if (!token) return;
+    if (!authed) return;
     getLocations(token)
-      .then((locs) => {
-        setLocations(locs);
-        setAuthed(true);
-        setMessage("");
-      })
+      .then(setLocations)
       .catch((err) => {
-        if (!handleAuthError(err)) setMessage(String(err.message ?? err));
+        if (!handleAuthError(err))
+          setMessage(String((err as Error).message ?? err));
       });
-  }, [token, handleAuthError]);
+  }, [authed, token, handleAuthError]);
 
-  const login = () => {
-    const t = tokenInput.trim();
-    if (!t) return;
-    localStorage.setItem(TOKEN_KEY, t);
-    setToken(t);
-  };
-
+  // 拉取历史日期
   const refreshHistory = useCallback(() => {
     getHistory()
       .then(setHistory)
       .catch(() => {});
   }, []);
 
-  // 登录后加载历史日期列表
   useEffect(() => {
     if (authed) refreshHistory();
   }, [authed, refreshHistory]);
 
-  // 切换日期时加载该天已存的密码（无记录则清空）
+  // 切换日期时加载该天已存密码
   useEffect(() => {
     if (!authed || !date) return;
     getDaily(date)
@@ -121,7 +88,9 @@ export default function Admin() {
         return next;
       });
       const found = results.filter((r) => r.password).length;
-      setMessage(`识别完成：${found}/${locations.length} 个密码，请核对后保存`);
+      setMessage(
+        `识别完成：${found}/${locations.length} 个密码，请核对后保存`,
+      );
     } catch (err) {
       if (!handleAuthError(err))
         setMessage(`识别失败：${(err as Error).message}`);
@@ -211,57 +180,29 @@ export default function Admin() {
     );
   };
 
-  const inputCls =
-    "bg-neutral-900/80 border border-neutral-700/50 rounded px-3 py-2 text-sm text-white outline-none focus:border-emerald-500/60 w-full";
-
+  // 未登录：显示登录表单
   if (!authed) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-neutral-900/60 border border-neutral-800 rounded-xl p-8 flex flex-col gap-4">
-          <div className="flex items-center gap-2 justify-center mb-2">
-            <KeyRound className="text-emerald-400 w-5 h-5" />
-            <span className="font-bold text-lg text-white">管理员登录</span>
-          </div>
-          <input
-            type="password"
-            value={tokenInput}
-            onChange={(e) => setTokenInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && login()}
-            placeholder="输入管理密钥"
-            className={inputCls}
-          />
-          <button
-            onClick={login}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg transition-colors"
-          >
-            登录
-          </button>
-          {message && (
-            <p className="text-sm text-red-400 text-center">{message}</p>
-          )}
-        </div>
-      </div>
+      <LoginForm
+        tokenInput={tokenInput}
+        onTokenInput={setTokenInput}
+        onLogin={() => login(tokenInput)}
+        message={message}
+      />
     );
   }
 
+  // 已登录：管理后台
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-200 font-sans">
-      <nav className="border-b border-neutral-800/80 bg-neutral-950/80 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Crosshair className="text-emerald-400 w-5 h-5" />
-            <span className="font-bold text-lg text-white">
-              每日密码管理后台
-            </span>
-          </div>
-          <a
-            href="#/"
-            className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors"
-          >
-            返回主页
-          </a>
-        </div>
-      </nav>
+      <NavBar title="每日密码管理后台">
+        <a
+          href="#/"
+          className="text-sm text-neutral-400 hover:text-emerald-400 transition-colors"
+        >
+          返回主页
+        </a>
+      </NavBar>
 
       <main className="max-w-4xl mx-auto p-4 md:p-8 flex flex-col gap-10">
         {message && (
@@ -270,159 +211,29 @@ export default function Admin() {
           </div>
         )}
 
-        {/* 每日密码录入 */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <ScanSearch className="text-emerald-500 w-5 h-5" />
-            每日密码录入
-          </h2>
-          <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className={`${inputCls} w-auto`}
-            />
-            {history.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <History className="w-4 h-4 text-neutral-500" />
-                <select
-                  value={history.includes(date) ? date : ""}
-                  onChange={(e) => e.target.value && setDate(e.target.value)}
-                  className={`${inputCls} w-auto cursor-pointer`}
-                >
-                  <option value="">历史记录...</option>
-                  {history.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            <label className="cursor-pointer bg-neutral-800 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
-              {recognizing ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              {recognizing ? "AI 识别中..." : "上传截图识别"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={recognizing}
-                onChange={handleRecognize}
-              />
-            </label>
-          </div>
+        <PasswordEntry
+          date={date}
+          onDateChange={setDate}
+          history={history}
+          recognizing={recognizing}
+          onRecognize={handleRecognize}
+          locations={locations}
+          passwords={passwords}
+          onPasswordChange={(id, pw) =>
+            setPasswords((p) => ({ ...p, [id]: pw }))
+          }
+          saving={saving}
+          onSave={handleSaveDaily}
+        />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {locations.map((l) => (
-              <div
-                key={l.id}
-                className="bg-neutral-900/60 border border-neutral-800 rounded-lg px-4 py-3 flex items-center justify-between gap-4"
-              >
-                <span className="text-white font-bold text-sm">{l.name}</span>
-                <input
-                  type="text"
-                  value={passwords[l.id] ?? ""}
-                  onChange={(e) =>
-                    setPasswords((p) => ({ ...p, [l.id]: e.target.value }))
-                  }
-                  placeholder="----"
-                  className="bg-transparent border-b border-neutral-700 focus:border-emerald-500 text-emerald-400 font-mono font-bold text-xl tracking-widest text-center outline-none w-28"
-                />
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={handleSaveDaily}
-            disabled={saving}
-            className="self-start bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? "保存中..." : "保存当日密码"}
-          </button>
-        </section>
-
-        {/* 地点配置 */}
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <MapPin className="text-emerald-500 w-5 h-5" />
-              地点配置（名称 / 攻略 / 图床链接）
-            </h2>
-            <button
-              onClick={handleAddLocation}
-              className="bg-neutral-800 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              新增地点
-            </button>
-          </div>
-          <div className="flex flex-col gap-3">
-            {locations.map((l) => (
-              <div
-                key={l.id}
-                className="bg-neutral-900/60 border border-neutral-800 rounded-lg p-4 grid grid-cols-1 md:grid-cols-[10rem_1fr_1fr_4rem_2.5rem] gap-3 items-center"
-              >
-                <input
-                  type="text"
-                  value={l.name}
-                  onChange={(e) => updateLocation(l.id, "name", e.target.value)}
-                  placeholder="地点名称"
-                  className={inputCls}
-                />
-                <input
-                  type="text"
-                  value={l.guide}
-                  onChange={(e) =>
-                    updateLocation(l.id, "guide", e.target.value)
-                  }
-                  placeholder="位置攻略"
-                  className={inputCls}
-                />
-                <input
-                  type="text"
-                  value={l.imageUrl}
-                  onChange={(e) =>
-                    updateLocation(l.id, "imageUrl", e.target.value)
-                  }
-                  placeholder="图床图片链接 https://..."
-                  className={inputCls}
-                />
-                <div className="w-16 h-10 bg-black rounded overflow-hidden flex items-center justify-center border border-neutral-800">
-                  {l.imageUrl ? (
-                    <img
-                      src={l.imageUrl}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-neutral-700 text-[10px]">无图</span>
-                  )}
-                </div>
-                <button
-                  onClick={() => handleDeleteLocation(l)}
-                  title="删除地点"
-                  className="w-9 h-9 rounded flex items-center justify-center text-neutral-500 hover:text-red-400 hover:bg-red-500/10 transition-colors justify-self-end"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleSaveLocations}
-            disabled={savingLocs}
-            className="self-start bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {savingLocs ? "保存中..." : "保存地点配置"}
-          </button>
-        </section>
+        <LocationConfigSection
+          locations={locations}
+          onAdd={handleAddLocation}
+          onDelete={handleDeleteLocation}
+          onUpdate={updateLocation}
+          saving={savingLocs}
+          onSave={handleSaveLocations}
+        />
       </main>
     </div>
   );
