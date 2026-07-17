@@ -9,13 +9,13 @@ interface NavBarProps {
 /** 通用顶部导航栏 */
 export default function NavBar({ title, children }: NavBarProps) {
   return (
-    <nav className="border-b border-[#2A2A38] bg-[#0F0F13]/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-150">
+    <nav className="border-b border-white/5 bg-[#0A0A0B]/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-[6px] bg-[#26C087]/10 flex items-center justify-center border border-[#26C087]/20">
-            <Crosshair className="text-[#26C087] w-5 h-5" />
+          <div className="w-8 h-8 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center">
+            <Crosshair className="text-indigo-500 w-5 h-5" />
           </div>
-          <span className="font-bold text-[16px] tracking-wider text-white">
+          <span className="font-semibold text-[16px] tracking-wider text-white">
             {title}
           </span>
         </div>

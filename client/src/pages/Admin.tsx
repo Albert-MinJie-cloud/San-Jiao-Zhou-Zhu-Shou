@@ -239,16 +239,16 @@ function AdminInner() {
 
   // 已登录：管理后台
   return (
-    <div className="min-h-screen bg-[#0F0F13] text-[#D0D0E0] text-[14px]">
+    <div className="min-h-screen bg-[#0A0A0B] text-slate-300 text-[14px]">
       <NavBar title="每日密码管理后台">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMasked(!isMasked)}
             title={isMasked ? "显示密码" : "隐藏密码"}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all duration-150 ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               isMasked
-                ? "bg-[#26C087]/10 text-[#26C087] border border-[#26C087]/30"
-                : "text-[#787890] border border-[#2A2A38] hover:text-white hover:border-[#787890]"
+                ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                : "text-slate-400 border border-white/10 hover:text-white hover:border-white/20"
             }`}
           >
             {isMasked ? (
@@ -260,7 +260,7 @@ function AdminInner() {
           </button>
           <a
             href="#/"
-            className="text-xs text-[#787890] hover:text-[#26C087] transition-colors"
+            className="text-xs text-slate-500 hover:text-indigo-400 transition-colors font-bold"
           >
             返回主页
           </a>
@@ -268,9 +268,9 @@ function AdminInner() {
       </NavBar>
 
       <main className="max-w-4xl mx-auto p-6 flex flex-col gap-8">
-        {/* 消息提示（现有逻辑保留） */}
+        {/* 消息提示 */}
         {message && (
-          <div className="bg-[#181820] border border-[#26C087]/20 rounded-[6px] px-5 py-3 text-sm text-[#26C087]">
+          <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl px-5 py-3 text-sm text-indigo-400">
             {message}
           </div>
         )}
@@ -295,40 +295,43 @@ function AdminInner() {
 
         {/* OCR 识别调试面板 */}
         {ocrDebug && (
-          <section className="bg-[#181820] border border-[#F0A030]/30 rounded-[6px] p-5 flex flex-col gap-3">
+          <section className="bg-white/5 border border-orange-500/20 rounded-3xl p-6 flex flex-col gap-4 relative group overflow-hidden">
+            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+
             <button
               onClick={() => setShowDebug(!showDebug)}
-              className="flex items-center gap-2 text-sm font-bold text-[#F0A030] hover:text-[#F0A030]/80 transition-colors"
+              className="flex items-center gap-2 text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors relative"
             >
               <Bug className="w-[18px] h-[18px]" />
               OCR 识别调试
-              <span className="text-xs text-[#787890] font-normal">
+              <span className="text-xs text-slate-500 font-normal">
                 {showDebug ? "点击收起" : "点击展开"}
                 {ocrResults && <> | 共 {ocrResults.length} 个地点，识别到 {ocrResults.filter((r) => r.password).length} 个密码</>}
               </span>
             </button>
+
             {showDebug && (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 relative">
                 {/* 匹配结果 */}
                 {ocrResults && (
                   <div>
-                    <h3 className="text-xs font-bold text-[#787890] mb-2">匹配结果</h3>
+                    <h3 className="text-[10px] uppercase tracking-tighter text-slate-500 font-bold mb-2">匹配结果</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {ocrResults.map((r) => (
                         <div
                           key={r.locationId}
-                          className={`flex items-center justify-between px-3 py-2 rounded-[6px] text-xs ${
+                          className={`flex items-center justify-between px-4 py-3 rounded-2xl border text-xs ${
                             r.password
-                              ? "bg-[#26C087]/5 border border-[#26C087]/20"
-                              : "bg-[#F0A030]/5 border border-[#F0A030]/20"
+                              ? "bg-indigo-500/5 border-indigo-500/20"
+                              : "bg-orange-500/5 border-orange-500/20"
                           }`}
                         >
-                          <span className="text-[#D0D0E0]">
+                          <span className="text-slate-300 font-medium">
                             [{r.locationId}] {r.name}
                           </span>
                           <span
                             className={`font-mono font-bold ${
-                              r.password ? "text-[#26C087]" : "text-[#F0A030]"
+                              r.password ? "text-indigo-400" : "text-orange-400"
                             }`}
                           >
                             {r.password || "(未识别)"}
@@ -339,52 +342,31 @@ function AdminInner() {
                   </div>
                 )}
 
-                {/* 原始文字块 */}
-                <div>
-                  <h3 className="text-xs font-bold text-[#787890] mb-2">
-                    原始文字块 ({ocrDebug.rawBlocks.length})
-                  </h3>
-                  <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-auto">
-                    {ocrDebug.rawBlocks.map((b, i) => (
-                      <span
-                        key={i}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0F0F13] border border-[#2A2A38] text-xs font-mono text-[#D0D0E0]"
-                        title={`x=${b.x} y=${b.y}`}
-                      >
-                        {b.text}
-                        <span className="text-[10px] text-[#787890]">
-                          ({b.x},{b.y})
-                        </span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
                 {/* 单元分割详情 */}
                 {ocrDebug.units && (
                   <div>
-                    <h3 className="text-xs font-bold text-[#787890] mb-2">
+                    <h3 className="text-[10px] uppercase tracking-tighter text-slate-500 font-bold mb-2">
                       单元分割详情 ({ocrDebug.units.length})
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       {ocrDebug.units.map((u) => (
                         <div
                           key={u.unit}
-                          className="bg-[#0F0F13] border border-[#2A2A38] rounded-[6px] p-3 flex flex-col gap-1 text-xs"
+                          className="bg-[#141417] border border-white/5 rounded-2xl p-3 flex flex-col gap-1 text-xs"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-[#26C087] font-bold">单元 {u.unit}</span>
-                            <span className="text-[#787890] text-[10px]">x: [{u.xRange[0]}-{u.xRange[1]}]</span>
+                            <span className="text-indigo-400 font-bold">单元 {u.unit}</span>
+                            <span className="text-slate-600 text-[10px]">x: [{u.xRange[0]}-{u.xRange[1]}]</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-[#787890]">地名:</span>
-                            <span className={`font-mono ${u.nameText ? "text-[#D0D0E0]" : "text-[#F0A030]"}`}>
+                            <span className="text-slate-500">地名:</span>
+                            <span className={`font-mono ${u.nameText ? "text-slate-300" : "text-orange-400"}`}>
                               {u.nameText || "(未识别)"}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-[#787890]">密码:</span>
-                            <span className={`font-mono font-bold ${u.passwordRaw ? "text-[#26C087]" : "text-[#F0A030]"}`}>
+                            <span className="text-slate-500">密码:</span>
+                            <span className={`font-mono font-bold ${u.passwordRaw ? "text-indigo-400" : "text-orange-400"}`}>
                               {u.passwordRaw || "(未识别)"}
                             </span>
                           </div>

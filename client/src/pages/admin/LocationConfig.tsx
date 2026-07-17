@@ -26,7 +26,7 @@ interface LocationConfigProps {
 }
 
 const inputCls =
-  "w-full bg-[#0F0F13] border border-[#2A2A38] rounded-[6px] px-3 py-2 text-sm text-white outline-none transition-all duration-150 placeholder:text-[#787890]/50 focus:border-[#26C087]";
+  "w-full rounded-xl border border-white/10 bg-[#141417] px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all";
 
 /** 地点配置区域 —— 管理地点名称/攻略/图床链接 */
 export default function LocationConfig({
@@ -85,7 +85,6 @@ export default function LocationConfig({
       try {
         const data = JSON.parse(event.target?.result as string);
         if (!Array.isArray(data)) throw new Error("格式错误");
-        // 通过 API 逐个导入
         showToast("请使用「保存地点配置」手动保存导入数据", "error");
       } catch {
         showToast("导入文件格式无效", "error");
@@ -96,11 +95,16 @@ export default function LocationConfig({
   };
 
   return (
-    <section className="bg-[#181820] border border-[#2A2A38] rounded-[6px] p-5 flex flex-col gap-5">
+    <section className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col gap-5 relative group overflow-hidden">
+      {/* 装饰光晕 */}
+      <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* 标题区 */}
-      <div className="flex items-center gap-2.5">
-        <MapPin className="text-[#26C087] w-[18px] h-[18px]" />
-        <h2 className="text-[16px] font-bold text-white flex items-center gap-2">
+      <div className="flex items-center gap-3 relative">
+        <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl flex items-center justify-center">
+          <MapPin className="text-indigo-500 w-5 h-5" />
+        </div>
+        <h2 className="text-[16px] font-semibold text-white flex items-center gap-2">
           地点配置
           {hasUnsaved && (
             <span className="w-2 h-2 rounded-full bg-orange-400 inline-block animate-pulse" />
@@ -109,20 +113,20 @@ export default function LocationConfig({
       </div>
 
       {/* 顶部操作栏：搜索 + 新增 */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 relative">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#787890] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索地点名称..."
-            className="pl-9 pr-3 py-2 bg-[#0F0F13] border border-[#2A2A38] rounded-[6px] text-sm text-white outline-none transition-all duration-150 focus:border-[#26C087] w-full placeholder:text-[#787890]/50"
+            className="pl-9 pr-3 py-2 bg-[#141417] border border-white/10 rounded-xl text-sm text-slate-200 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all w-full placeholder:text-slate-600"
           />
         </div>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 bg-[#26C087] hover:bg-[#26C087]/90 text-white text-sm font-medium px-4 py-2 rounded-[6px] transition-all duration-150 active:scale-[0.98]"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all active:scale-[0.98] shadow-xl"
         >
           <Plus className="w-4 h-4" />
           新增地点
@@ -131,35 +135,35 @@ export default function LocationConfig({
 
       {/* 列表区域 */}
       {locations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
-          <MapPin className="w-10 h-10 text-[#787890]/30" />
-          <p className="text-sm text-[#787890]">
+        <div className="flex flex-col items-center justify-center py-14 gap-3 text-center relative">
+          <MapPin className="w-10 h-10 text-slate-700" />
+          <p className="text-sm text-slate-500">
             还没有配置任何地点
           </p>
           <button
             onClick={onAdd}
-            className="flex items-center gap-2 text-[#26C087] text-sm font-medium hover:text-[#26C087]/80 transition-colors"
+            className="flex items-center gap-2 text-indigo-400 text-sm font-bold hover:text-indigo-300 transition-colors"
           >
             <Plus className="w-4 h-4" />
             新增第一个地点
           </button>
         </div>
       ) : filteredLocations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 gap-2">
-          <Search className="w-8 h-8 text-[#787890]/30" />
-          <p className="text-sm text-[#787890]">未找到匹配的地点</p>
+        <div className="flex flex-col items-center justify-center py-10 gap-2 relative">
+          <Search className="w-8 h-8 text-slate-700" />
+          <p className="text-sm text-slate-500">未找到匹配的地点</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 relative">
           {filteredLocations.map((l) => (
             <div
               key={l.id}
-              className="bg-[#0F0F13] border border-[#2A2A38] rounded-[6px] p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-start transition-all duration-150 hover:bg-[#0F0F13]/70 hover:border-[#2A2A38]/80 group"
+              className="bg-[#141417] border border-white/5 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-start transition-all hover:border-indigo-500/30 hover:bg-white/5 group/loc"
             >
               {/* 地点名称（必填） */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-[#787890]">
-                  地点名称 <span className="text-[#E65C5C]">*</span>
+                <label className="text-[10px] uppercase tracking-tighter text-slate-500 font-bold">
+                  地点名称 <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -172,7 +176,7 @@ export default function LocationConfig({
 
               {/* 攻略 */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-[#787890]">位置攻略</label>
+                <label className="text-[10px] uppercase tracking-tighter text-slate-500 font-bold">位置攻略</label>
                 <input
                   type="text"
                   value={l.guide}
@@ -184,7 +188,7 @@ export default function LocationConfig({
 
               {/* 图床链接 */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-[#787890]">图床链接</label>
+                <label className="text-[10px] uppercase tracking-tighter text-slate-500 font-bold">图床链接</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -200,14 +204,14 @@ export default function LocationConfig({
                       <button
                         onClick={() => setPreviewUrl(l.imageUrl)}
                         title="预览图片"
-                        className="shrink-0 w-8 h-8 rounded-[6px] flex items-center justify-center text-[#787890] hover:text-[#26C087] hover:bg-[#26C087]/10 transition-all duration-150"
+                        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onUpdate(l.id, "imageUrl", "")}
                         title="清空链接"
-                        className="shrink-0 w-8 h-8 rounded-[6px] flex items-center justify-center text-[#787890] hover:text-[#E65C5C] hover:bg-[#E65C5C]/10 transition-all duration-150"
+                        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -215,7 +219,7 @@ export default function LocationConfig({
                   ) : (
                     <button
                       title="无图片"
-                      className="shrink-0 w-8 h-8 rounded-[6px] flex items-center justify-center text-[#787890] cursor-default"
+                      className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-slate-600 cursor-default"
                     >
                       <ImageIcon className="w-4 h-4" />
                     </button>
@@ -227,7 +231,7 @@ export default function LocationConfig({
               <button
                 onClick={() => handleDelete(l)}
                 title="删除地点"
-                className="shrink-0 w-9 h-9 rounded-[6px] flex items-center justify-center text-[#787890] hover:text-[#E65C5C] hover:bg-[#E65C5C]/10 transition-all duration-150 self-end md:self-start mt-0 md:mt-5"
+                className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all self-end md:self-start mt-0 md:mt-5"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -238,16 +242,16 @@ export default function LocationConfig({
 
       {/* 底部操作栏 */}
       {locations.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 relative">
           <div className="flex items-center gap-2.5">
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-[6px] text-sm font-medium text-[#787890] bg-[#0F0F13] border border-[#2A2A38] transition-all duration-150 hover:text-[#D0D0E0] hover:border-[#787890] active:scale-[0.98]"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 bg-transparent border border-white/10 transition-all hover:bg-white/5 hover:text-white active:scale-[0.98]"
             >
               <Download className="w-4 h-4" />
               导出
             </button>
-            <label className="flex items-center gap-2 px-4 py-2.5 rounded-[6px] text-sm font-medium text-[#787890] bg-[#0F0F13] border border-[#2A2A38] transition-all duration-150 hover:text-[#D0D0E0] hover:border-[#787890] cursor-pointer active:scale-[0.98]">
+            <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 bg-transparent border border-white/10 transition-all hover:bg-white/5 hover:text-white cursor-pointer active:scale-[0.98]">
               <Upload className="w-4 h-4" />
               导入
               <input
@@ -270,7 +274,7 @@ export default function LocationConfig({
             <button
               onClick={onSave}
               disabled={saving}
-              className="flex items-center gap-2 bg-[#26C087] hover:bg-[#26C087]/90 text-white font-medium px-6 py-2.5 rounded-[6px] text-sm transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+              className="flex items-center gap-2 bg-white text-indigo-900 px-6 py-2.5 rounded-xl text-sm font-bold shadow-xl hover:bg-slate-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
             >
               <Save className="w-4 h-4" />
               {saving ? "保存中..." : "保存地点配置"}
@@ -282,9 +286,9 @@ export default function LocationConfig({
       {/* 删除确认弹窗 */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[#181820] border border-[#2A2A38] rounded-[6px] p-6 w-full max-w-sm mx-4 flex flex-col gap-5">
-            <h3 className="text-base font-bold text-white">确认删除</h3>
-            <p className="text-sm text-[#D0D0E0]">
+          <div className="bg-[#141417] border border-white/10 rounded-3xl p-6 w-full max-w-sm mx-4 flex flex-col gap-5">
+            <h3 className="text-base font-semibold text-white">确认删除</h3>
+            <p className="text-sm text-slate-400">
               确定要删除「<span className="text-white font-medium">{deleteConfirm.name}</span>」吗？
               <br />
               该地点的所有历史密码也将一并删除，此操作不可撤销。
@@ -292,13 +296,13 @@ export default function LocationConfig({
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2.5 rounded-[6px] text-sm font-medium text-[#787890] bg-[#0F0F13] border border-[#2A2A38] transition-all duration-150 hover:text-white hover:border-[#787890]"
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 bg-transparent border border-white/10 transition-all hover:bg-white/5 hover:text-white"
               >
                 取消
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2.5 rounded-[6px] text-sm font-medium text-white bg-[#E65C5C] transition-all duration-150 hover:bg-[#E65C5C]/90 active:scale-[0.98]"
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 transition-all hover:bg-red-500/90 active:scale-[0.98]"
               >
                 确认删除
               </button>
@@ -314,13 +318,13 @@ export default function LocationConfig({
           onClick={() => setPreviewUrl(null)}
         >
           <div
-            className="max-w-lg max-h-[80vh] bg-[#181820] border border-[#2A2A38] rounded-[6px] p-3"
+            className="max-w-lg max-h-[80vh] bg-[#141417] border border-white/10 rounded-3xl p-3"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={previewUrl}
               alt="预览"
-              className="max-w-full max-h-[70vh] rounded object-contain"
+              className="max-w-full max-h-[70vh] rounded-2xl object-contain"
               onError={() => {
                 showToast("图片加载失败", "error");
                 setPreviewUrl(null);
