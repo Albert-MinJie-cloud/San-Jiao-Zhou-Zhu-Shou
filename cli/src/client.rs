@@ -91,7 +91,7 @@ impl ApiClient {
         let form = reqwest::blocking::multipart::Form::new()
             .part("image", part);
 
-        let mut headers = self.auth_header();
+        let headers = self.auth_header();
         let resp = self
             .client
             .post(&url)

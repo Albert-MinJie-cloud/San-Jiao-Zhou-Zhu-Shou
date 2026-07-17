@@ -10,10 +10,12 @@ pub struct DailyData {
 /// 单条地点 + 密码
 #[derive(Debug, Deserialize)]
 pub struct DailyEntry {
+    #[allow(dead_code)]
     pub id: i32,
     pub name: String,
     pub guide: String,
     #[serde(rename = "imageUrl")]
+    #[allow(dead_code)]
     pub image_url: String,
     pub password: String,
 }
@@ -33,6 +35,7 @@ pub struct RecognizeResponse {
 #[derive(Debug, Deserialize)]
 pub struct RecognizeResult {
     #[serde(rename = "locationId")]
+    #[allow(dead_code)]
     pub location_id: i32,
     pub name: String,
     pub password: String,
