@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import type { LocationConfig } from "@/types";
+import { Eye, EyeOff, Bug } from "lucide-react";
+import type { LocationConfig, RecognizeResult, OcrDebug } from "@/types";
 import { getDaily, getHistory } from "@/api/daily";
 import {
   addLocation,
@@ -42,6 +42,9 @@ function AdminInner() {
   // 新增交互状态
   const [isMasked, setIsMasked] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [ocrDebug, setOcrDebug] = useState<OcrDebug | null>(null);
+  const [ocrResults, setOcrResults] = useState<RecognizeResult[] | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   // 认证通过后拉取地点配置
   useEffect(() => {
@@ -89,7 +92,10 @@ function AdminInner() {
     setRecognizing(true);
     setMessage("");
     try {
-      const results = await recognize(file, token);
+      const { results, debug } = await recognize(file, token);
+      setOcrResults(results);
+      setOcrDebug(debug);
+      setShowDebug(true);
       setPasswords((prev) => {
         const next = { ...prev };
         results.forEach((r) => {
@@ -286,6 +292,111 @@ function AdminInner() {
           onReset={handleResetDaily}
           isMasked={isMasked}
         />
+
+        {/* OCR 识别调试面板 */}
+        {ocrDebug && (
+          <section className="bg-[#181820] border border-[#F0A030]/30 rounded-[6px] p-5 flex flex-col gap-3">
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="flex items-center gap-2 text-sm font-bold text-[#F0A030] hover:text-[#F0A030]/80 transition-colors"
+            >
+              <Bug className="w-[18px] h-[18px]" />
+              OCR 识别调试
+              <span className="text-xs text-[#787890] font-normal">
+                {showDebug ? "点击收起" : "点击展开"}
+                {ocrResults && <> | 共 {ocrResults.length} 个地点，识别到 {ocrResults.filter((r) => r.password).length} 个密码</>}
+              </span>
+            </button>
+            {showDebug && (
+              <div className="flex flex-col gap-4">
+                {/* 匹配结果 */}
+                {ocrResults && (
+                  <div>
+                    <h3 className="text-xs font-bold text-[#787890] mb-2">匹配结果</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {ocrResults.map((r) => (
+                        <div
+                          key={r.locationId}
+                          className={`flex items-center justify-between px-3 py-2 rounded-[6px] text-xs ${
+                            r.password
+                              ? "bg-[#26C087]/5 border border-[#26C087]/20"
+                              : "bg-[#F0A030]/5 border border-[#F0A030]/20"
+                          }`}
+                        >
+                          <span className="text-[#D0D0E0]">
+                            [{r.locationId}] {r.name}
+                          </span>
+                          <span
+                            className={`font-mono font-bold ${
+                              r.password ? "text-[#26C087]" : "text-[#F0A030]"
+                            }`}
+                          >
+                            {r.password || "(未识别)"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 原始文字块 */}
+                <div>
+                  <h3 className="text-xs font-bold text-[#787890] mb-2">
+                    原始文字块 ({ocrDebug.rawBlocks.length})
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5 max-h-[200px] overflow-auto">
+                    {ocrDebug.rawBlocks.map((b, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-[4px] bg-[#0F0F13] border border-[#2A2A38] text-xs font-mono text-[#D0D0E0]"
+                        title={`x=${b.x} y=${b.y}`}
+                      >
+                        {b.text}
+                        <span className="text-[10px] text-[#787890]">
+                          ({b.x},{b.y})
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 单元分割详情 */}
+                {ocrDebug.units && (
+                  <div>
+                    <h3 className="text-xs font-bold text-[#787890] mb-2">
+                      单元分割详情 ({ocrDebug.units.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {ocrDebug.units.map((u) => (
+                        <div
+                          key={u.unit}
+                          className="bg-[#0F0F13] border border-[#2A2A38] rounded-[6px] p-3 flex flex-col gap-1 text-xs"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#26C087] font-bold">单元 {u.unit}</span>
+                            <span className="text-[#787890] text-[10px]">x: [{u.xRange[0]}-{u.xRange[1]}]</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#787890]">地名:</span>
+                            <span className={`font-mono ${u.nameText ? "text-[#D0D0E0]" : "text-[#F0A030]"}`}>
+                              {u.nameText || "(未识别)"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#787890]">密码:</span>
+                            <span className={`font-mono font-bold ${u.passwordRaw ? "text-[#26C087]" : "text-[#F0A030]"}`}>
+                              {u.passwordRaw || "(未识别)"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         <LocationConfigSection
           locations={locations}

@@ -2,10 +2,13 @@
   "name": "delta-force-helper",
   "private": true,
   "scripts": {
-    "dev": "npm run dev:client & npm run dev:server",
+    "killports": "for port in 3000 8000; do lsof -ti :$port | xargs kill -9 2>/dev/null; done; echo 'ports 3000,8000 cleared'",
+    "restart": "npm run killports && npm run dev",
+    "dev": "npm run killports && trap 'kill 0' EXIT; npm run dev:client & npm run dev:server & wait",
     "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server && npm run dev",
+    "dev:server": "cd server-py && .venv/bin/python -m uvicorn app.main:app --port 8000 --reload",
+    "dev:server:node": "cd server && npm run dev",
     "build": "cd client && npm run build",
-    "clean": "rm -rf client/dist client/node_modules server/node_modules"
+    "clean": "rm -rf client/dist client/node_modules server/node_modules server-py/.venv"
   }
 }

@@ -22,10 +22,21 @@ class LocationConfig(BaseModel):
     imageUrl: str
 
 
+class OcrBlock(BaseModel):
+    text: str
+    x: int
+    y: int
+
+
 class RecognizeResult(BaseModel):
     locationId: int
     name: str
     password: str
+
+
+class RecognizeResponse(BaseModel):
+    results: list[RecognizeResult]
+    debug: Optional[dict] = None
 
 
 class SaveDailyEntry(BaseModel):

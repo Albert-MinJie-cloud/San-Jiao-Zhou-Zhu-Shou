@@ -32,7 +32,10 @@ async def admin_recognize(
         locs = await _get_locations(session)
 
     name_list = [loc.name for loc in locs]
-    items = await recognize_passwords(contents, name_list)
+    items, debug_info = await recognize_passwords(contents, name_list)
+
+    print(f"[Admin] 识别输入: {name_list}", flush=True)
+    print(f"[Admin] 识别返回: {items}", flush=True)
 
     results = []
     for loc in locs:
@@ -53,7 +56,7 @@ async def admin_recognize(
             )
         )
 
-    return {"results": results}
+    return {"results": results, "debug": debug_info}
 
 
 @router.put("/admin/daily")

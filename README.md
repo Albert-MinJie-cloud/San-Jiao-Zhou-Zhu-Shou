@@ -16,14 +16,13 @@
 │       └── types/              # TypeScript 类型定义
 │
 ├── server/               # [已弃用] 旧版后端 (Node Express + Tesseract.js)
-│                          # 推荐使用 Python 版替代
-│
-├── server-py/            # 后端 (Python FastAPI + SQLAlchemy + pytesseract)
+
+├── server-py/            # 后端 (Python FastAPI + SQLAlchemy + GLM-4V)
 │   ├── app/
 │   │   ├── main.py             # FastAPI 入口 + CORS
 │   │   ├── routes/daily.py     # 公开接口 (GET /api/daily, /api/history)
 │   │   ├── routes/admin.py     # 管理接口 (OCR/录入/地点 CRUD)
-│   │   ├── ocr/recognize.py    # pytesseract 本地 OCR
+│   │   ├── ocr/recognize.py    # 智谱 GLM-4V-Flash 视觉识别
 │   │   ├── database.py         # SQLAlchemy 异步引擎 + 自动建表
 │   │   ├── models.py           # ORM 模型
 │   │   └── schemas.py          # Pydantic 模型
@@ -43,27 +42,24 @@
 
 ## 快速开始
 
-### 后端（Python 版，推荐）
+### 一键启动
+
+```bash
+npm run dev          # 同时启动前端 + Python 后端
+npm run restart      # 清理端口后重启
+```
+
+### 后端（Python 版）
 
 ```bash
 cd server-py
-uv run uvicorn app.main:app --port 8000
+uv sync                                    # 安装依赖
+uv run uvicorn app.main:app --port 8000    # 启动服务
 ```
 
 > 需要 `uv`：`brew install uv`
->
-> OCR 需系统安装 Tesseract：
->
-> ```bash
-> brew install tesseract
-> # 中文语言包（~350MB 合集，网络不好可单独下载）
-> brew install tesseract-lang
-> # 或手动下载单个文件（仅 ~10MB）：
-> # curl -L -o /opt/homebrew/share/tessdata/chi_sim.traineddata \
-> #   https://github.com/tesseract-ocr/tessdata/raw/main/chi_sim.traineddata
-> ```
 
-### 后端（Node 版）
+### 后端（Node 版，已弃用）
 
 ```bash
 cd server && npm install && npm run dev
@@ -82,6 +78,18 @@ cd cli
 cargo run                 # 查看今日密码
 cargo run -- --help       # 查看全部命令
 ```
+
+## 根目录 npm 脚本
+
+| 命令 | 说明 |
+|---|---|
+| `npm run dev` | 清理端口 + 同时启动前端和后端 |
+| `npm run restart` | 杀端口后重启 |
+| `npm run killports` | 清理 3000/8000 端口 |
+| `npm run dev:client` | 仅启动前端 |
+| `npm run dev:server` | 仅启动 Python 后端 |
+| `npm run build` | 构建前端 |
+| `npm run clean` | 清理构建产物和虚拟环境 |
 
 ## 命令参考
 
@@ -107,12 +115,17 @@ delta config set-token <token>
 
 ## 环境配置
 
-### 后端 `.env`
+### 后端 `.env`（server-py/）
 
-```
+```bash
 PORT=8000
 ADMIN_TOKEN=你的管理密钥
+
+# OCR 视觉识别（智谱 GLM-4V-Flash，免费）
+GLM_API_KEY=你的智谱API密钥
 ```
+
+> 注册智谱 API：https://open.bigmodel.cn/
 
 ### CLI 配置文件
 
@@ -128,7 +141,7 @@ token = "你的管理密钥"
 
 - **攻略图生成** — 3:4 竖屏合集图/单卡，一键下载无水印原图
 - **每日密码管理** — 6 个地点密码录入，按日期回溯历史，快捷复制
-- **截图 OCR 识别** — 上传游戏截图，本地 Tesseract 自动提取密码
+- **截图 OCR 识别** — 上传游戏截图，智谱 GLM-4V-Flash 视觉模型自动提取密码
 - **地点配置 CRUD** — 名称/攻略/图床链接管理，支持新增和删除
 - **终端查询** — `delta` 命令直接看密码，无需打开浏览器
 
@@ -137,7 +150,7 @@ token = "你的管理密钥"
 | 层 | 技术 |
 |---|---|
 | 前端 | React 19, Vite 6, TailwindCSS v4, React Router 7 |
-| 后端 (Python) | FastAPI, SQLAlchemy + aiosqlite, pytesseract |
-| 后端 (Node) | Express, better-sqlite3, Tesseract.js |
+| 后端 (Python) | FastAPI, SQLAlchemy + aiosqlite, 智谱 GLM-4V-Flash |
+| 后端 (Node) | Express, better-sqlite3, Tesseract.js（已弃用） |
 | CLI | Rust, clap, reqwest, comfy-table |
 | 数据库 | SQLite |

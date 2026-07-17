@@ -1,21 +1,21 @@
 import { request, authHeaders } from "./client";
-import type { RecognizeResult, LocationConfig } from "@/types";
+import type { RecognizeResult, RecognizeResponse, LocationConfig } from "@/types";
 
 /** 上传截图，AI 识别密码 */
 export async function recognize(
   file: File,
   token: string,
-): Promise<RecognizeResult[]> {
+): Promise<RecognizeResponse> {
   const form = new FormData();
   form.append("image", file);
-  const data = await request<{ results: RecognizeResult[] }>(
+  const data = await request<RecognizeResponse>(
     await fetch("/api/admin/recognize", {
       method: "POST",
       headers: authHeaders(token),
       body: form,
     }),
   );
-  return data.results;
+  return data;
 }
 
 /** 保存某天的密码 */
